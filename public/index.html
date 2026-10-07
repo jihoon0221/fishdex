@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>손맛어보</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="bubbles" id="bubbles"></div>
+    <div class="brand"><span class="mascot" id="mascot"></span><div><h1>손맛어보</h1><span class="tag">오늘 낚은 물고기로 채우는 나만의 바다 도감</span></div></div>
+    <button class="lvchip" id="lvchip" type="button" aria-label="내 레벨 보기"></button>
+    <div class="waves" aria-hidden="true">
+      <svg class="w1" viewBox="0 0 1200 44" preserveAspectRatio="none"><path d="M0 22 Q75 4 150 22 T300 22 T450 22 T600 22 T750 22 T900 22 T1050 22 T1200 22 V44 H0Z" style="fill:var(--paper)"/></svg>
+      <svg class="w2" viewBox="0 0 1200 44" preserveAspectRatio="none"><path d="M0 30 Q50 16 100 30 T200 30 T300 30 T400 30 T500 30 T600 30 T700 30 T800 30 T900 30 T1000 30 T1100 30 T1200 30 V44 H0Z" style="fill:var(--paper)"/></svg>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="주요 메뉴">
+    <button class="tab" data-view="dex" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/></svg>도감</button>
+    <button class="tab" data-view="reg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>촬영 등록</button>
+    <button class="tab" data-view="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-6-6.2-6-11a6 6 0 0 1 12 0c0 4.8-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg>조황 지도</button>
+    <button class="tab" data-view="ach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="5"/><path d="M9 13.5 7.5 21 12 18.5 16.5 21 15 13.5"/></svg>도전과제</button>
+    <button class="tab" data-view="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"/></svg>내 기록</button>
+  </nav>
+
+  <main>
+    <section id="v-dex"></section>
+    <section id="v-reg" hidden></section>
+    <section id="v-map" hidden></section>
+    <section id="v-ach" hidden></section>
+    <section id="v-log" hidden></section>
+  </main>
+</div>
+
+<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true" id="sheet"></div></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="progress.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
