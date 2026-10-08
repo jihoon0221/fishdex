@@ -4,12 +4,28 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>손맛어보</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="theme-color" content="#1E9BD7">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<!-- 시작 화면: app.js의 playSplash()가 채우고 2.6초 뒤(누르면 바로) 사라짐 -->
+<div class="splash" id="splash" aria-hidden="true">
+  <div class="sp-bubbles"></div>
+  <div class="sp-center">
+    <div class="sp-fish"><img src="logo.svg" alt=""></div>
+    <h1 class="sp-title" id="sp-title">손맛어보</h1>
+    <p class="sp-tag" id="sp-tag"></p>
+  </div>
+  <div class="sp-waves">
+    <svg class="w1" viewBox="0 0 1200 44" preserveAspectRatio="none"><path d="M0 22 Q75 4 150 22 T300 22 T450 22 T600 22 T750 22 T900 22 T1050 22 T1200 22 V44 H0Z" style="fill:var(--paper)"/></svg>
+    <svg class="w2" viewBox="0 0 1200 44" preserveAspectRatio="none"><path d="M0 30 Q50 16 100 30 T200 30 T300 30 T400 30 T500 30 T600 30 T700 30 T800 30 T900 30 T1000 30 T1100 30 T1200 30 V44 H0Z" style="fill:var(--paper)"/></svg>
+  </div>
+</div>
 <div class="app">
   <header class="top">
     <div class="bubbles" id="bubbles"></div>

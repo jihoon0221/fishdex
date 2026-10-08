@@ -383,7 +383,7 @@ function editCatch(id){
 }
 
 const MASCOT={id:99,name:'손맛이',c:['#FF8A65','#FFE3D4','#FF6A45'],body:{h:28,hb:.88,hump:.4,sn:.6,ped:6.5,eye:.24},dorsal:{t:'soft',a:.32,b:.78,hs:10},anal:{a:.62,b:.8,h:8},tail:{t:'fork',len:34,h:24,fork:10},pat:[{t:'bands',n:3,a:.3,b:.72,w:7,col:'#FFFFFF',o:.8}]};
-$('#mascot').innerHTML=fishSVG(MASCOT);
+$('#mascot').innerHTML='<img src="logo.svg" alt="" style="display:block;width:100%;height:100%">';
 $('#bubbles').innerHTML=Array.from({length:14},(_,i)=>{const sz=4+(i*7)%10;return `<i style="left:${(i*37)%100}%;width:${sz}px;height:${sz}px;animation-duration:${4+(i*1.3)%5}s;animation-delay:${-(i*0.9)%6}s"></i>`;}).join('');
 async function resetDemo(){
   try{ await api.resetDemo(); await loadAll(); mapSel=mapFocus=null; mapFilter=0; mapMine=false; logQ=''; logSort='new'; confirmDel=null; confirmReset=false; reg=emptyReg(); go('dex'); Sound.play('bubble'); toast(t('demo.reset')); }
@@ -464,11 +464,32 @@ function renderSet(){
   else $('#s-reset').onclick=()=>{ confirmReset=true; renderSet(); };
 }
 
+/* ---------- 시작 화면 ---------- */
+// 시작 화면이 완전히 사라지면 끝나는 Promise를 돌려준다
+function playSplash(){
+  const el=$('#splash'); if(!el) return Promise.resolve();
+  $('#sp-title').innerHTML=[...t('brand')].map((ch,i)=>`<span style="animation-delay:${(1+i*.08).toFixed(2)}s">${ch===' '?'&nbsp;':esc(ch)}</span>`).join('');
+  $('#sp-tag').textContent=t('brand.tag');
+  el.querySelector('.sp-bubbles').innerHTML=Array.from({length:16},(_,i)=>{const sz=6+(i*7)%16;return `<i style="left:${(i*41+7)%100}%;width:${sz}px;height:${sz}px;animation-duration:${(3.5+(i*1.7)%4).toFixed(1)}s;animation-delay:${-((i*.6)%3).toFixed(1)}s"></i>`;}).join('');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return new Promise(resolve=>{
+    let done=false;
+    const hide=()=>{ if(done) return; done=true; el.classList.add('out'); document.removeEventListener('keydown',hide);
+      setTimeout(()=>{ el.remove(); resolve(); },reduce?0:550); };
+    el.addEventListener('click',hide); document.addEventListener('keydown',hide);  // 누르면 바로 넘어감
+    setTimeout(hide,reduce?900:2600);
+  });
+}
+
 /* ---------- 시작: 서버에서 데이터 받기 ---------- */
 (async function boot(){
   applyStatic();
-  try{ await loadAll(); }catch(e){ toast(t('server.down')); return; }
-  // 시연용: 페이지를 열 때마다 이전 세션을 끊고 로그인 화면부터 시작
+  const splash=playSplash();
+  // 애니메이션이 도는 동안 데이터를 받고, 시연용으로 이전 세션을 끊어 둔다
+  let ok=true;
+  try{ await loadAll(); }catch(e){ ok=false; }
   try{ await api.logout(); }catch(_){}
+  await splash;  // 시작 화면이 사라진 뒤에 로그인 창을 띄움
+  if(!ok){ toast(t('server.down')); return; }
   showLogin();
 })();
