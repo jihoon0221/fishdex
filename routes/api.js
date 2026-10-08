@@ -6,6 +6,7 @@ const multer = require('multer');
 const { db, UPLOAD_DIR, hashPw, checkPw, resetDemo } = require('../db');
 const { jit } = require('../seed');
 const Progress = require('../progress');
+const { localize } = require('../messages');
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ let speciesCache = null;
 function allSpecies() {
   if (!speciesCache) {
     speciesCache = db.prepare('SELECT * FROM species ORDER BY id').all().map(r => ({
-      id: r.id, name: r.name, en: r.en, hab: r.hab, rar: r.rar, avg: r.avg, desc: r.desc, ...JSON.parse(r.art_json),
+      id: r.id, name: r.name, en: r.en, hab: r.hab, rar: r.rar, avg: r.avg, desc: r.desc, descEn: r.desc_en, ...JSON.parse(r.art_json),
     }));
   }
   return speciesCache;
@@ -32,7 +33,7 @@ const toCatch = r => ({
 const userCatches = user => db.prepare('SELECT * FROM catches WHERE user = ?').all(user).map(toCatch);
 const statsOf = user => Progress.userStats(userCatches(user), user, sp);
 
-const bad = (res, msg, code = 400) => res.status(code).json({ error: msg });
+const bad = (res, msg, code = 400) => res.status(code).json({ error: localize(res.req, msg) });
 
 function removeUpload(url) {
   if (!url || !url.startsWith('/uploads/')) return;
@@ -109,7 +110,7 @@ router.post('/logout', (req, res) => {
 /* ---------- 조회 (Read) ---------- */
 router.get('/species', (req, res) => res.json(allSpecies()));
 
-router.get('/spots', (req, res) => res.json(db.prepare('SELECT name AS n, lat, lon FROM spots').all()));
+router.get('/spots', (req, res) => res.json(db.prepare('SELECT name AS n, name_en AS en, lat, lon FROM spots').all()));
 
 router.get('/catches', (req, res) => {
   const sid = +req.query.sid;
@@ -123,11 +124,12 @@ router.get('/me', requireUser, (req, res) => {
   res.json({ user: req.user, ...Progress.summary(statsOf(req.user), sp) });
 });
 
-/* ---------- 어종 판별 (프로토타입: 고정 응답) ---------- */
+/* ---------- 어종 판별 (프로토타입: 참돔 1순위 고정 응답) ---------- */
+const DEMO_RESULT = [{ sid: 2, p: 94 }, { sid: 1, p: 4 }, { sid: 8, p: 2 }];
 router.post('/identify', withUpload(identifyPhoto), (req, res) => {
   if (!req.file) return bad(res, '판별할 사진을 올려 주세요.');
   const delay = 800 + Math.random() * 400; // 스캔 애니메이션이 보이도록
-  setTimeout(() => res.json([{ sid: 2, p: 94 }, { sid: 1, p: 4 }, { sid: 8, p: 2 }]), delay);
+  setTimeout(() => res.json(DEMO_RESULT), delay);
 });
 
 /* ---------- 등록 (Create) ---------- */

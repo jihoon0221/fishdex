@@ -16,8 +16,9 @@ const { DEMO_USER, DEMO_PASSWORD } = require('../seed');
 
 let port;
 
-async function call(method, url, { body, cookie } = {}) {
+async function call(method, url, { body, cookie, lang } = {}) {
   const headers = {};
+  if (lang) headers['x-lang'] = lang;
   let payload = null;
   if (cookie) headers.cookie = cookie;
   if (body && body.multipart) {
@@ -103,6 +104,8 @@ test('손맛어보 API', async t => {
       assert.strictEqual(r2.status, 400);
       const r3 = await call('POST', '/catches', { cookie, body: form({ sid: 2, len: 45, date: '2026-10-07' }) });
       assert.strictEqual(r3.status, 400);
+      const en = await call('POST', '/catches', { cookie, lang: 'en', body: form({ sid: 21, len: 45, lat: 1, lon: 1, date: '2026-10-07' }) });
+      assert.strictEqual(en.data.error, 'Please choose a species.');
     });
 
     await t.test('본인 기록만 수정·삭제, 장소가 바뀌면 좌표도 갱신', async () => {

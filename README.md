@@ -27,6 +27,11 @@ npm test           # 데모 시나리오 검증 (node:test)
 | 촬영 등록 | Create | 사진 업로드 → 판별 후보 3개 → 길이, 날짜, 장소, 메모 입력 → XP, 레벨, 도전과제 축하 연출 |
 | 조황 지도 | Read | 모든 유저의 기록. 가까운 지역은 숫자로 묶여 표시 |
 | 내 기록 | Update / Delete | 본인 기록만 수정하거나 삭제 가능 |
+| 설정 | – | 로그아웃, 효과음 켜기/끄기와 볼륨, 한국어/English 전환, 데모 데이터 초기화 |
+
+- **일러스트**: 20종을 실제 어류 사진을 참고해 종마다 체형, 지느러미, 입, 꼬리, 무늬를 따로 정의해 SVG로 그립니다(`public/fish.js`). 광어는 위에서 본 납작한 몸, 갈치는 리본형, 학꽁치는 긴 아래턱으로 표현했습니다.
+- **효과음**: Web Audio API로 합성하므로 소리 파일이 없습니다. 사진 판별, 등록, 도전과제, 레벨 업, 삭제 때 재생됩니다.
+- **한/영 전환**: 화면 문구, 어종 이름과 설명, 낚시 포인트 이름, 칭호, 도전과제, 서버 오류 메시지가 모두 바뀝니다. 설정은 브라우저에 저장됩니다.
 
 > 어종 판별은 프로토타입이라 고정 응답(참돔 94% / 감성돔 4% / 볼락 2%)을 돌려줍니다.
 
@@ -75,11 +80,18 @@ fishdex/
 ├─ db.js             SQLite 연결, 테이블 생성, 비어 있으면 seed
 ├─ seed.js           어종 20 · 포인트 19 · 예시 조과 34 · 예시 유저
 ├─ progress.js       XP / 레벨 / 칭호 / 도전과제 (서버·브라우저 공용)
+├─ messages.js       서버 오류 메시지 영어판 (X-Lang 헤더)
 ├─ routes/api.js     REST API
-├─ test/progress.test.js
+├─ test/progress.test.js  데모 시나리오 검증
 ├─ data/             fishdex.db
 ├─ uploads/          업로드된 사진
-└─ public/           index.html, styles.css, api.js, app.js
+└─ public/
+   ├─ index.html, styles.css
+   ├─ app.js          화면 로직
+   ├─ api.js          서버 호출
+   ├─ fish.js         물고기 일러스트 생성 (SVG)
+   ├─ i18n.js         한국어/English 문구와 설정 저장
+   └─ sound.js        효과음 (Web Audio)
 ```
 
 ## API
@@ -93,7 +105,7 @@ fishdex/
 | GET | `/api/species` | | 20종 (이름, 서식지, 희귀도, 일러스트 파라미터 등) |
 | GET | `/api/spots` | | 낚시 포인트 `[{n, lat, lon}]` |
 | GET | `/api/catches?sid=` | | 전체 유저 조과 (지도용) |
-| POST | `/api/identify` | | multipart `photo` → 판별 후보 3개 (고정 응답, 0.8~1.2초 지연) |
+| POST | `/api/identify` | | multipart `photo` → 판별 후보 3개 (참돔 1순위 고정 응답, 0.8~1.2초 지연) |
 | POST | `/api/catches` | ✓ | multipart: `photo`(선택), `sid, len, spot, lat, lon, date, memo` → `{catch, before, after, isNew, newAch}` |
 | PUT | `/api/catches/:id` | ✓ | JSON `{sid, len, spot, date, memo}`. 본인 기록만. 장소가 바뀌면 좌표 갱신 |
 | DELETE | `/api/catches/:id` | ✓ | 본인 기록만. 사진 파일도 삭제 |
@@ -109,6 +121,8 @@ fishdex/
 - 도전과제 9개: 첫 손맛, 어보 입문(5종), 열 칸의 어보(10종), 어보 완성(20종), 대물 사냥꾼(50cm), 바다와 강, 전국 일주(6곳), 한 우물 파기(같은 어종 5마리), 전설의 손맛
 
 ## 데모 시나리오 (3분 영상)
+
+장면별 조작, 내레이션, 문제 해결은 [DEMO_SCRIPT.md](DEMO_SCRIPT.md)에 있습니다.
 
 1. 지훈 / 1234로 로그인 → 메인 도감 (9종, Lv.5, 448 XP)
 2. 촬영 등록에서 참돔 사진 업로드 → 판별 1순위 참돔 94%

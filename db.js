@@ -16,10 +16,10 @@ db.pragma('journal_mode = WAL');
 db.exec(`
 CREATE TABLE IF NOT EXISTS species (
   id INTEGER PRIMARY KEY, name TEXT NOT NULL, en TEXT, hab TEXT, rar TEXT,
-  avg INTEGER, "desc" TEXT, art_json TEXT
+  avg INTEGER, "desc" TEXT, desc_en TEXT, art_json TEXT
 );
 CREATE TABLE IF NOT EXISTS spots (
-  name TEXT PRIMARY KEY, lat REAL NOT NULL, lon REAL NOT NULL
+  name TEXT PRIMARY KEY, name_en TEXT, lat REAL NOT NULL, lon REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS catches (
   id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT NOT NULL, species_id INTEGER NOT NULL,
@@ -34,6 +34,11 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 `);
 
+// 예전 DB 파일에 영어 컬럼이 없으면 추가
+const hasCol = (t, c) => db.prepare(`PRAGMA table_info(${t})`).all().some(r => r.name === c);
+if (!hasCol('species', 'desc_en')) db.exec('ALTER TABLE species ADD COLUMN desc_en TEXT');
+if (!hasCol('spots', 'name_en')) db.exec('ALTER TABLE spots ADD COLUMN name_en TEXT');
+
 /* ---------- 비밀번호 (Node 내장 scrypt) ---------- */
 function hashPw(pw) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -47,17 +52,22 @@ function checkPw(pw, stored) {
 }
 
 /* ---------- seed ---------- */
+// 어종·포인트는 기준 데이터라 서버를 켤 때마다 seed.js 내용으로 맞춘다 (일러스트 수정이 바로 반영되도록)
+const syncReference = db.transaction(() => {
+  const upSp = db.prepare(`INSERT INTO species (id, name, en, hab, rar, avg, "desc", desc_en, art_json) VALUES (?,?,?,?,?,?,?,?,?)
+    ON CONFLICT(id) DO UPDATE SET name=excluded.name, en=excluded.en, hab=excluded.hab, rar=excluded.rar, avg=excluded.avg,
+      "desc"=excluded."desc", desc_en=excluded.desc_en, art_json=excluded.art_json`);
+  for (const s of seed.SPECIES) upSp.run(s.id, s.name, s.en, s.hab, s.rar, s.avg, s.desc, s.descEn, JSON.stringify(s.art));
+  const upSpot = db.prepare(`INSERT INTO spots (name, name_en, lat, lon) VALUES (?,?,?,?)
+    ON CONFLICT(name) DO UPDATE SET name_en=excluded.name_en, lat=excluded.lat, lon=excluded.lon`);
+  for (const p of seed.SPOTS) upSpot.run(p.n, p.en, p.lat, p.lon);
+});
+
 // sessions는 비우지 않는다: 시연 중 Shift+R을 눌러도 로그인이 유지되도록
 const fillSeed = db.transaction(() => {
   db.exec(`DELETE FROM catches; DELETE FROM species; DELETE FROM spots; DELETE FROM users;
            DELETE FROM sqlite_sequence WHERE name = 'catches';`);
-  const insSp = db.prepare('INSERT INTO species (id, name, en, hab, rar, avg, "desc", art_json) VALUES (?,?,?,?,?,?,?,?)');
-  for (const s of seed.SPECIES) {
-    const { c, h, fork, d, tail, pat } = s;
-    insSp.run(s.id, s.name, s.en, s.hab, s.rar, s.avg, s.desc, JSON.stringify({ c, h, fork, d, tail, pat }));
-  }
-  const insSpot = db.prepare('INSERT INTO spots (name, lat, lon) VALUES (?,?,?)');
-  for (const p of seed.SPOTS) insSpot.run(p.n, p.lat, p.lon);
+  syncReference();
   const insCatch = db.prepare(`INSERT INTO catches (id, user, species_id, length_cm, spot, lat, lon, caught_on, memo, photo_url, created_at)
                                VALUES (?,?,?,?,?,?,?,?,?,NULL,?)`);
   for (const c of seed.seedCatches()) insCatch.run(c.id, c.user, c.sid, c.len, c.spot, c.lat, c.lon, c.date, c.memo, c.date);
@@ -73,5 +83,6 @@ function clearUploads() {
 function resetDemo() { fillSeed(); clearUploads(); }
 
 if (db.prepare('SELECT COUNT(*) AS n FROM species').get().n === 0) fillSeed();
+else syncReference();
 
 module.exports = { db, DB_FILE, UPLOAD_DIR, hashPw, checkPw, fillSeed, resetDemo };
